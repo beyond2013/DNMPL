@@ -26,7 +26,7 @@ Participation is voluntary. Responses will be used for academic research purpose
 
 ## Section B: First Programming Language
 
-**Q3. Which programming language do you currently use as the first programming language for teaching programming fundamentals?**
+**Q3. Which of the following should be the first programming language to teach the course-rank in order 1. means most preferred?**
 
 - C
 - C++
@@ -34,6 +34,10 @@ Participation is voluntary. Responses will be used for academic research purpose
 - Java
 - JavaScript
 - Other (please specify)
+
+**Q3-1. When you offered the course most recently?**.
+
+**Q3-2. How many times have you offered the course?**
 
 **Q4. What are the primary reasons for selecting this programming language?**
 
