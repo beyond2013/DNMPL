@@ -1,0 +1,13 @@
+PhD Course work Design and Modeling of Programming Languages
+I need to generate code in python which consists of
+30 programs taught to first semester students for teaching programming fundamentals. Programs may fall into one of the following categories. Broader categories may multiple programs.
+
+1. Simple Calculations Involving various data types (Unit Conversion programs)
+2. Programs that generate various mathematical sequence (loops)
+3. Calculation of Grade Point Average and Grade (if else / switch )
+4. Functions (built in and user defined functions)
+5. Examples covering scope of variables 
+6. Recursive Functions
+7. Use of Arrays / Lists 
+8. Storing data to the disk
+
