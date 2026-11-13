@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Automata Lab</title>
+<style>
+:root{--bg:#fafaf8;--fg:#1f2328;--mut:#656d76;--card:#fff;--bd:#d0d7de;--ac:#2f6fed;--ok:#1a7f37;--no:#cf222e;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16181c;--fg:#e6e8eb;--mut:#9198a1;--card:#1e2126;--bd:#363b42;--ac:#6ea0ff;--ok:#3fb950;--no:#ff7b72}}
+:root[data-theme="dark"]{--bg:#16181c;--fg:#e6e8eb;--mut:#9198a1;--card:#1e2126;--bd:#363b42;--ac:#6ea0ff;--ok:#3fb950;--no:#ff7b72}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--fg);font:15px/1.5 system-ui,-apple-system,"Segoe UI",sans-serif}
+main{max-width:860px;margin:0 auto;padding:20px 16px 48px}
+h1{font-size:22px;margin:0 0 4px}h2{font-size:15px;margin:0 0 8px}
+.sub{color:var(--mut);margin:0 0 16px}
+.card{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:14px}
+label{display:block;font-size:13px;color:var(--mut);margin:0 0 4px}
+input,textarea{width:100%;font:inherit;color:var(--fg);background:var(--bg);border:1px solid var(--bd);border-radius:6px;padding:8px}
+textarea{resize:vertical;min-height:58px}
+.row{display:grid;grid-template-columns:160px 1fr;gap:12px}
+@media(max-width:560px){.row{grid-template-columns:1fr}}
+button,.chip{font:inherit;border:1px solid var(--bd);background:var(--bg);color:var(--fg);border-radius:6px;padding:5px 10px;cursor:pointer}
+button.p{background:var(--ac);color:#fff;border-color:var(--ac)}
+.chips{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px}.chip{font-size:12.5px}
+.err{color:var(--no);margin-top:8px}.ok{color:var(--ok)}.no{color:var(--no)}
+code,.mono{font-family:ui-monospace,Menlo,Consolas,monospace}
+.rx{font-size:17px;padding:10px;background:var(--bg);border:1px solid var(--bd);border-radius:6px;overflow-x:auto;white-space:nowrap}
+svg{width:100%;height:auto;display:block}
+.e{fill:none;stroke:var(--fg);stroke-width:1.5}.ah{fill:var(--fg)}
+.s{fill:var(--card);stroke:var(--fg);stroke-width:1.5}.s.hl{fill:var(--ac);fill-opacity:.25}
+.t{fill:var(--fg);font:13px ui-monospace,Menlo,monospace;text-anchor:middle;dominant-baseline:central}
+.l{fill:var(--ac);font:600 13px ui-monospace,Menlo,monospace;text-anchor:middle;dominant-baseline:central}
+.sc{overflow-x:auto}table{border-collapse:collapse;font-family:ui-monospace,Menlo,monospace;font-size:13px}
+td,th{border:1px solid var(--bd);padding:3px 10px;text-align:center}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}@media(max-width:560px){.two{grid-template-columns:1fr}}
+details{color:var(--mut);font-size:13.5px}summary{cursor:pointer}
+ul{margin:6px 0;padding-left:20px}
+</style></head><body><main>
+<h1>Automata Lab</h1>
+<p class="sub">Describe a language, get its minimal DFA and a regular expression, then test your own attempts against it.</p>
+
+<div class="card">
+ <div class="row">
+  <div><label for="alpha">Alphabet</label><input id="alpha" value="a, b"></div>
+  <div><label for="desc">How are strings in the language formed?</label>
+   <textarea id="desc">even number of a’s followed by odd number of b’s</textarea></div>
+ </div>
+ <div class="chips" id="chips"></div>
+ <div class="err" id="err"></div>
+ <details><summary>Supported phrases</summary>
+  <ul>
+   <li><b>Counts:</b> <i>even / odd number of a’s</i>, <i>number of a’s divisible by 3</i>, <i>number of a’s mod 3 = 1</i>, <i>exactly / at least / at most 2 b’s</i></li>
+   <li><b>Patterns:</b> <i>starts with ab</i>, <i>ends with ba</i>, <i>contains aa</i>, <i>any string</i>, <i>empty string</i></li>
+   <li><b>Combine:</b> <i>X followed by Y</i> (or <i>then</i>), <i>X and Y</i>, <i>X or Y</i>, <i>not X</i>. Precedence: or, then and, then followed by. No parentheses.</li>
+   <li>In a <i>followed by</i> chain, a count such as “even number of a’s” describes a block made only of a’s. On its own it counts a’s anywhere in the string.</li>
+   <li>Symbols are single characters, and case is ignored.</li>
+  </ul></details>
+</div>
+
+<div id="out" hidden>
+ <div class="card"><h2>DFA diagram <label style="display:inline;margin-left:10px"><input type="checkbox" id="dead" style="width:auto"> show dead state</label></h2>
+  <svg id="svg" viewBox="0 0 640 450" role="img" aria-label="DFA diagram"></svg>
+  <div class="sc" id="tbl" style="margin-top:8px"></div></div>
+ <div class="card"><h2>Equivalent regular expression</h2><div class="rx mono" id="rx"></div>
+  <p class="sub" style="margin:6px 0 0;font-size:13px">+ means union, * means star, ε is the empty string. Derived by state elimination, so a shorter hand-written form may exist.</p></div>
+ <div class="two">
+  <div class="card"><h2>Test a string</h2>
+   <input id="str" placeholder="type a string (leave empty for ε)"><div id="trace" class="mono" style="margin-top:8px;font-size:13px"></div>
+   <h2 style="margin-top:12px">Shortest examples</h2><div id="ex" class="mono" style="font-size:13px"></div></div>
+  <div class="card"><h2>Check your regex</h2>
+   <input id="myrx" class="mono" placeholder="e.g. (aa)*b(bb)*">
+   <div class="chips"><button id="beps" type="button">ε</button><button id="bemp" type="button">∅</button></div>
+   <div id="rxres" style="margin-top:8px"></div></div>
+ </div>
+ <div class="card"><h2>Check your own DFA</h2>
+  <p class="sub" style="margin:0 0 6px;font-size:13px">One line per state: <code>state: symbol→target, …</code>. Mark the start with <code>&gt;</code> and accepting states with <code>*</code>. Example: <code>&gt;*q0: a→q1, b→q2</code></p>
+  <textarea id="mydfa" class="mono" placeholder="&gt;*q0: a→q1, b→q2&#10;q1: a→q0, b→d"></textarea>
+  <div style="margin-top:8px"><button id="bdfa" type="button" class="p">Compare</button></div><div id="dfares" style="margin-top:8px"></div></div>
+</div>
+</main>
+<script>
+const $=id=>document.getElementById(id);let A=[],D=null,NM=[],DEAD=[];
+const EX=["even number of a’s followed by odd number of b’s","even number of a’s and even number of b’s","number of a’s divisible by 3","ends with ab or starts with ba","at least 2 a’s followed by exactly 1 b","contains aa and not ends with a"];
+/* ---------- DFA toolkit ---------- */
+const mk=(n,start,acc,d)=>({n,start,acc,d});
+function counter(sym,cap,next,accf,only){const n=cap+1+(only?1:0),dead=cap+1,d=[];
+ for(let i=0;i<n;i++)d.push(A.map(c=>i===dead?dead:c===sym?next(i):only?dead:i));
+ return mk(n,0,Array.from({length:n},(_,i)=>i<=cap&&accf(i)),d)}
+function pat(S,kind){const m=S.length;let n,d=[],acc=[];
+ if(kind==='starts'){n=m+2;for(let i=0;i<n;i++){d.push(A.map(c=>i<m?(c===S[i]?i+1:m+1):i===m?m:m+1));acc.push(i===m)}}
+ else{n=m+1;for(let j=0;j<n;j++){d.push(A.map(c=>{if(j===m&&kind==='contains')return m;const t=S.slice(0,j)+c;
+  for(let k=Math.min(m,t.length);k>=0;k--)if(t.endsWith(S.slice(0,k)))return k}));acc.push(j===m)}}
+ return mk(n,0,acc,d)}
+const all=()=>mk(1,0,[true],[A.map(()=>0)]);
+const empt=()=>mk(2,0,[true,false],[A.map(()=>1),A.map(()=>1)]);
+const comp=a=>({...a,acc:a.acc.map(x=>!x)});
+function prod(a,b,op){const n=a.n*b.n,d=[],acc=[];for(let i=0;i<a.n;i++)for(let j=0;j<b.n;j++){
+ d[i*b.n+j]=A.map((_,c)=>a.d[i][c]*b.n+b.d[j][c]);acc[i*b.n+j]=op(a.acc[i],b.acc[j])}
+ return mk(n,a.start*b.n+b.start,acc,d)}
+function cat(a,b){const key=s=>s.join(','),close=s=>{if(s.some(x=>x<a.n&&a.acc[x]))s=s.concat(a.n+b.start);return[...new Set(s)].sort((x,y)=>x-y)};
+ const st=close([a.start]),ids=new Map([[key(st),0]]),sets=[st],d=[];
+ for(let q=0;q<sets.length;q++)d[q]=A.map((_,c)=>{const t=close(sets[q].map(x=>x<a.n?a.d[x][c]:a.n+b.d[x-a.n][c])),k=key(t);
+  if(!ids.has(k)){ids.set(k,sets.length);sets.push(t)}return ids.get(k)});
+ return mk(sets.length,0,sets.map(s=>s.some(x=>x>=a.n&&b.acc[x-a.n])),d)}
+function mini(a){const ord=[a.start],idx=new Map([[a.start,0]]);
+ for(let q=0;q<ord.length;q++)for(const t of a.d[ord[q]])if(!idx.has(t)){idx.set(t,ord.length);ord.push(t)}
+ const dd=ord.map(s=>a.d[s].map(t=>idx.get(t)));let cls=ord.map(s=>a.acc[s]?1:0),cnt=new Set(cls).size;
+ for(;;){const sig=new Map(),nc=dd.map((r,i)=>{const k=cls[i]+'|'+r.map(t=>cls[t]).join(',');if(!sig.has(k))sig.set(k,sig.size);return sig.get(k)});
+  cls=nc;if(sig.size===cnt)break;cnt=sig.size}
+ const m=cnt,d=[],acc=[];ord.forEach((s,i)=>{const c=cls[i];if(!d[c]){d[c]=dd[i].map(t=>cls[t]);acc[c]=a.acc[s]}});
+ return mk(m,0,acc,d)}
+function live(a){const L=a.acc.slice();for(let ch=true;ch;){ch=false;for(let i=0;i<a.n;i++)if(!L[i]&&a.d[i].some(t=>L[t])){L[i]=true;ch=true}}return L}
+/* ---------- description parser ---------- */
+function parse(txt){txt=txt.toLowerCase().replace(/[’`]/g,"'").trim().replace(/\.$/,'');if(!txt)throw Error('Please describe the language.');
+ const sym=t=>{t=t.replace(/^['"]|['"]$/g,'');for(const c of[t,t.replace(/'s$/,''),t.replace(/s$/,'')])if(A.includes(c))return c;throw Error('“'+t+'” is not in the alphabet')};
+ const lit=t=>{t=t.replace(/^['"]|['"]$/g,'');if(!t||[...t].some(c=>!A.includes(c)))throw Error('“'+t+'” uses symbols outside the alphabet');return t};
+ const clause=(p,only)=>{let neg=false,m;p=p.trim();if(/^not\s+/.test(p)){neg=true;p=p.replace(/^not\s+/,'')}
+  p=p.replace(/^(?:(?:strings?|words?|the|that|which|with|having|have|has|is|are)\s+)+/,'').replace(/^an?\s+(?=even|odd|number|exactly|at\s)/,'');
+  let r;
+  if(m=p.match(/^(even|odd)\s+number\s+of\s+(\S+)$/))r=counter(sym(m[2]),1,i=>(i+1)%2,i=>i===(m[1]==='even'?0:1),only);
+  else if(m=p.match(/^number\s+of\s+(\S+?)\s+(?:is\s+)?(?:divisible\s+by|a\s+multiple\s+of|multiple\s+of)\s+(\d+)$/)){const k=+m[2];if(k<1)throw Error('k must be at least 1');r=counter(sym(m[1]),k-1,i=>(i+1)%k,i=>i===0,only)}
+  else if(m=p.match(/^number\s+of\s+(\S+?)\s+(?:mod|%)\s*(\d+)\s*(?:=|==|is)\s*(\d+)$/)){const k=+m[2],q=+m[3];if(k<1)throw Error('modulus must be at least 1');r=counter(sym(m[1]),k-1,i=>(i+1)%k,i=>i===q%k,only)}
+  else if(m=p.match(/^(exactly|at\s+least|at\s+most)\s+(\d+)\s+(\S+)$/)){const n=+m[2],s=sym(m[3]),w=m[1][0]==='e'?0:m[1].endsWith('least')?1:2;
+   r=w===1?counter(s,n,i=>Math.min(i+1,n),i=>i>=n,only):counter(s,n+1,i=>Math.min(i+1,n+1),i=>w===0?i===n:i<=n,only)}
+  else if(m=p.match(/^(?:start|begin)s?\s+with\s+(\S+)$/))r=pat(lit(m[1]),'starts');
+  else if(m=p.match(/^ends?\s+with\s+(\S+)$/))r=pat(lit(m[1]),'ends');
+  else if(m=p.match(/^contains?\s+(\S+)$/))r=pat(lit(m[1]),'contains');
+  else if(/^(?:any\s+string|anything|all\s+strings)$/.test(p))r=all();
+  else if(/^(?:the\s+)?(?:empty\s+string|nothing)$/.test(p))r=empt();
+  else throw Error('I don’t understand “'+p+'”. See the supported phrases below.');
+  return neg?comp(r):r};
+ const seq=s=>{const ps=s.split(/\s+(?:followed\s+by|then)\s+/);return ps.map(p=>clause(p,ps.length>1)).reduce(cat)};
+ const and=s=>s.split(/\s+and\s+/).map(seq).reduce((x,y)=>prod(x,y,(p,q)=>p&&q));
+ return mini(txt.split(/\s+or\s+/).map(and).reduce((x,y)=>prod(x,y,(p,q)=>p||q)))}
+/* ---------- regex extraction (state elimination) ---------- */
+const EPS={s:'ε',p:3,e:true},W=(r,p)=>r.p<p?'('+r.s+')':r.s;
+const rcat=(a,b)=>!a||!b?null:a.e?b:b.e?a:{s:W(a,2)+W(b,2),p:2};
+const runi=(a,b)=>!a?b:!b?a:a.s===b.s?a:a.e&&b.k?b:b.e&&a.k?a:{s:a.s+'+'+b.s,p:1};
+const rstar=a=>!a||a.e?EPS:a.k?a:{s:W(a,3)+'*',p:3,k:true};
+function toRegex(a){const L=live(a);if(!L[a.start])return'∅';const n=a.n,S=n,F=n+1,R=Array.from({length:n+2},()=>Array(n+2).fill(null));
+ for(let i=0;i<n;i++)if(L[i]){A.forEach((c,ci)=>{const j=a.d[i][ci];if(L[j])R[i][j]=runi(R[i][j],{s:c,p:3})});if(a.acc[i])R[i][F]=EPS}
+ R[S][a.start]=EPS;let al=[];for(let i=0;i<n;i++)if(L[i])al.push(i);al.push(S,F);
+ for(;;){const cand=al.filter(x=>x<n);if(!cand.length)break;
+  const cost=q=>al.filter(p=>p!==q&&R[p][q]).length*al.filter(r=>r!==q&&R[q][r]).length;
+  const q=cand.reduce((x,y)=>cost(y)<cost(x)?y:x),lp=rstar(R[q][q]),o=al.filter(x=>x!==q);
+  for(const p of o)if(R[p][q])for(const r of o)if(R[q][r])R[p][r]=runi(R[p][r],rcat(rcat(R[p][q],lp),R[q][r]));
+  al=o}
+ return R[S][F]?R[S][F].s:'∅'}
+/* ---------- user regex -> DFA ---------- */
+function rxToDfa(src){const s=src.replace(/\s+/g,''),N=[];let i=0;const nn=()=>(N.push({e:[],t:{}}),N.length-1);
+ const alt=()=>{let f=cc();while(s[i]==='+'||s[i]==='|'){i++;const g=cc(),a=nn(),b=nn();N[a].e.push(f[0],g[0]);N[f[1]].e.push(b);N[g[1]].e.push(b);f=[a,b]}return f};
+ const cc=()=>{let f=null;while(i<s.length&&!')+|'.includes(s[i])){const g=st();if(!f)f=g;else{N[f[1]].e.push(g[0]);f=[f[0],g[1]]}}if(!f){const a=nn();return[a,a]}return f};
+ const st=()=>{let f=at();while(s[i]==='*'){i++;const a=nn(),b=nn();N[a].e.push(f[0],b);N[f[1]].e.push(f[0],b);f=[a,b]}return f};
+ const at=()=>{const c=s[i++];if(c==='('){const f=alt();if(s[i++]!==')')throw Error('missing )');return f}
+  if(c==='ε'||c==='$'){const a=nn();return[a,a]}if(c==='∅'||c==='#'){return[nn(),nn()]}
+  if(!A.includes(c.toLowerCase()))throw Error('symbol “'+c+'” is not in the alphabet');const a=nn(),b=nn();(N[a].t[c.toLowerCase()]=[]).push(b);return[a,b]};
+ const f=alt();if(i<s.length)throw Error('unexpected “'+s[i]+'”');
+ const cl=set=>{const out=new Set(set),stk=[...set];while(stk.length){const x=stk.pop();for(const y of N[x].e)if(!out.has(y)){out.add(y);stk.push(y)}}return[...out].sort((x,y)=>x-y)};
+ const key=x=>x.join(','),st0=cl([f[0]]),ids=new Map([[key(st0),0]]),sets=[st0],d=[];
+ for(let q=0;q<sets.length;q++)d[q]=A.map(c=>{const t=cl(sets[q].flatMap(x=>N[x].t[c]||[])),k=key(t);if(!ids.has(k)){ids.set(k,sets.length);sets.push(t)}return ids.get(k)});
+ return mk(sets.length,0,sets.map(x=>x.includes(f[1])),d)}
+function diff(a,b){const seen=new Map([[a.start+','+b.start,null]]),q=[[a.start,b.start]];
+ for(let h=0;h<q.length;h++){const[x,y]=q[h];if(a.acc[x]!==b.acc[y]){let w='',k=x+','+y;while(seen.get(k)){const[pk,c]=seen.get(k);w=c+w;k=pk}return{w,inA:a.acc[x]}}
+  A.forEach((c,ci)=>{const nx=a.d[x][ci],ny=b.d[y][ci],k=nx+','+ny;if(!seen.has(k)){seen.set(k,[x+','+y,c]);q.push([nx,ny])}})}return null}
+const show=w=>w===''?'ε':w;
+/* ---------- drawing ---------- */
+function draw(hl){const ok=$('dead').checked,vs=[...Array(D.n).keys()].filter(i=>ok||!DEAD[i]),P={},cx=320,cy=225,Rx=230,Ry=130,r=24,k=vs.length;
+ vs.forEach((v,j)=>{const g=-Math.PI/2+2*Math.PI*j/k;P[v]=k>1?[cx+Rx*Math.cos(g),cy+Ry*Math.sin(g)]:[cx,cy]});
+ const E=new Map();for(const i of vs)A.forEach((c,ci)=>{const j=D.d[i][ci];if(P[j]){const key=i+','+j;E.set(key,(E.get(key)||[]).concat(c))}});
+ const f=x=>x.toFixed(1),rot=(v,t)=>[v[0]*Math.cos(t)-v[1]*Math.sin(t),v[0]*Math.sin(t)+v[1]*Math.cos(t)];
+ let h='<defs><marker id="ar" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="8" markerHeight="8" orient="auto"><path class="ah" d="M0 0L10 5L0 10z"/></marker></defs>';
+ for(const[key,labs]of E){const[i,j]=key.split(',').map(Number),lb=labs.join(','),[x,y]=P[i];
+  if(i===j){let v=[x-cx,y-cy],m=Math.hypot(...v)||1;v=[v[0]/m,v[1]/m];if(k===1)v=[0,-1];
+   const a=rot(v,-.45),b=rot(v,.45),c1=rot(v,-.75),c2=rot(v,.75);
+   h+=`<path class="e" marker-end="url(#ar)" d="M${f(x+a[0]*r)} ${f(y+a[1]*r)}C${f(x+c1[0]*r*3.2)} ${f(y+c1[1]*r*3.2)} ${f(x+c2[0]*r*3.2)} ${f(y+c2[1]*r*3.2)} ${f(x+b[0]*r)} ${f(y+b[1]*r)}"/><text class="l" x="${f(x+v[0]*r*3.1)}" y="${f(y+v[1]*r*3.1)}">${lb}</text>`}
+  else{const[x2,y2]=P[j],dx=x2-x,dy=y2-y,len=Math.hypot(dx,dy),nx=-dy/len,ny=dx/len,off=E.has(j+','+i)?50:18,c=[(x+x2)/2+nx*off,(y+y2)/2+ny*off];
+   const u=(px,py,qx,qy)=>{const l=Math.hypot(qx-px,qy-py);return[px+(qx-px)/l*r,py+(qy-py)/l*r]},a=u(x,y,c[0],c[1]),b=u(x2,y2,c[0],c[1]);
+   h+=`<path class="e" marker-end="url(#ar)" d="M${f(a[0])} ${f(a[1])}Q${f(c[0])} ${f(c[1])} ${f(b[0])} ${f(b[1])}"/><text class="l" x="${f(.25*a[0]+.5*c[0]+.25*b[0]+nx*(off>20?12:-12*0+12))}" y="${f(.25*a[1]+.5*c[1]+.25*b[1]+ny*12)}">${lb}</text>`}}
+ const[sx,sy]=P[D.start];h+=`<path class="e" marker-end="url(#ar)" d="M${f(sx-62)} ${f(sy)}L${f(sx-r)} ${f(sy)}"/>`;
+ for(const v of vs){const[x,y]=P[v];h+=`<circle class="s${hl===v?' hl':''}" cx="${f(x)}" cy="${f(y)}" r="${r}"/>`+(D.acc[v]?`<circle class="s" style="fill:none" cx="${f(x)}" cy="${f(y)}" r="${r-5}"/>`:'')+`<text class="t" x="${f(x)}" y="${f(y)}">${NM[v]}</text>`}
+ $('svg').innerHTML=h}
+function table(){let h='<table><tr><th></th>'+A.map(c=>'<th>'+c+'</th>').join('')+'</tr>';
+ D.d.forEach((row,i)=>h+=`<tr><td>${D.start===i?'→':''}${D.acc[i]?'*':''}${NM[i]}</td>`+row.map(t=>'<td>'+NM[t]+'</td>').join('')+'</tr>');$('tbl').innerHTML=h+'</table>'}
+function examples(){const acc=[],rej=[];let lvl=[''];
+ for(let l=0;l<=7&&(acc.length<10||rej.length<6);l++){for(const w of lvl){let s=D.start;for(const c of w)s=D.d[s][A.indexOf(c)];
+  (D.acc[s]?acc:rej).push(show(w))}
+  if(lvl.length*A.length>4000)break;lvl=lvl.flatMap(w=>A.map(c=>w+c))}
+ $('ex').innerHTML='<span class="ok">accepted:</span> '+(acc.slice(0,10).join(', ')||'none found')+'<br><span class="no">rejected:</span> '+(rej.slice(0,6).join(', ')||'none found')}
+function test(){const w=$('str').value.replace(/\s+/g,'').toLowerCase();if(!D)return;
+ let s=D.start,path=[NM[s]];for(const c of w){const ci=A.indexOf(c);if(ci<0){$('trace').innerHTML='<span class="no">“'+c+'” is not in the alphabet</span>';return}s=D.d[s][ci];path.push('–'+c+'→ '+NM[s])}
+ $('trace').innerHTML=path.join(' ')+'<br>'+(D.acc[s]?'<b class="ok">accepted</b>':'<b class="no">rejected</b>');draw(s)}
+/* ---------- wiring ---------- */
+function build(){$('err').textContent='';
+ try{A=[...new Set($('alpha').value.toLowerCase().split(/[\s,]+/).filter(Boolean))];
+  if(!A.length)throw Error('Enter at least one symbol.');if(A.some(c=>[...c].length!==1))throw Error('Symbols must be single characters.');
+  if(A.some(c=>'+|*()$#ε∅'.includes(c)))throw Error('Symbols can’t be + | * ( ) $ # ε ∅.');
+  D=parse($('desc').value)}catch(e){$('err').textContent=e.message;$('out').hidden=true;D=null;return}
+ const L=live(D);DEAD=L.map(x=>!x);let q=0;NM=D.d.map((_,i)=>DEAD[i]?'d':'q'+q++);
+ $('out').hidden=false;$('rx').textContent=toRegex(D);draw(-1);table();examples();test();checkRx();checkDfa()}
+function checkRx(){const v=$('myrx').value.trim(),o=$('rxres');if(!v||!D){o.textContent='';return}
+ try{const d=diff(D,rxToDfa(v));o.innerHTML=d?`<b class="no">Not equivalent.</b> Counterexample: <code>${show(d.w)}</code>, which your regex ${d.inA?'rejects but it should be accepted':'accepts but it should be rejected'}.`:'<b class="ok">Equivalent. Your regex matches the language exactly.</b>'}
+ catch(e){o.innerHTML='<span class="no">'+e.message+'</span>'}}
+function checkDfa(){const v=$('mydfa').value.trim(),o=$('dfares');if(!v||!D){o.textContent='';return}
+ try{const names=[],rows=[];let start=-1;
+  for(const ln of v.split('\n').filter(l=>l.trim())){const m=ln.match(/^\s*(>?)\s*(\*?)\s*([^\s:]+)\s*:\s*(.*)$/);if(!m)throw Error('Can’t read line: '+ln);
+   if(m[1])start=names.length;names.push(m[3]);rows.push({acc:!!m[2],t:m[4]})}
+  if(start<0)start=0;const d=rows.map(r=>{const row=Array(A.length).fill(-1);
+   r.t.split(',').map(x=>x.trim()).filter(Boolean).forEach(x=>{const p=x.split(/->|→/).map(y=>y.trim());if(p.length!==2)throw Error('Bad transition “'+x+'”');
+    const ci=A.indexOf(p[0].toLowerCase()),ti=names.indexOf(p[1]);if(ci<0)throw Error('symbol “'+p[0]+'” is not in the alphabet');if(ti<0)throw Error('unknown state “'+p[1]+'”');row[ci]=ti});return row});
+  const miss=[];d.forEach((r,i)=>r.forEach((t,c)=>{if(t<0)miss.push(names[i]+' on '+A[c])}));
+  if(miss.length)throw Error('Missing transitions: '+miss.slice(0,6).join('; ')+(miss.length>6?'…':'')+'. A DFA needs a transition for every symbol, so add a dead state.');
+  const r=diff(D,mk(names.length,start,rows.map(x=>x.acc),d));
+  o.innerHTML=r?`<b class="no">Not equivalent.</b> Counterexample: <code>${show(r.w)}</code>, which your DFA ${r.inA?'rejects but it should be accepted':'accepts but it should be rejected'}.`:'<b class="ok">Equivalent. Your DFA recognises exactly this language.</b>'}
+ catch(e){o.innerHTML='<span class="no">'+e.message+'</span>'}}
+$('chips').innerHTML=EX.map(e=>'<button class="chip" type="button">'+e+'</button>').join('');
+$('chips').onclick=e=>{if(e.target.classList.contains('chip')){$('desc').value=e.target.textContent;build()}};
+let tm;const deb=()=>{clearTimeout(tm);tm=setTimeout(build,350)};
+$('alpha').oninput=deb;$('desc').oninput=deb;$('str').oninput=test;$('myrx').oninput=checkRx;$('bdfa').onclick=checkDfa;
+$('dead').onchange=()=>draw(-1);
+$('beps').onclick=()=>{$('myrx').value+='ε';checkRx()};$('bemp').onclick=()=>{$('myrx').value+='∅';checkRx()};
+build();
+</script></body></html>
