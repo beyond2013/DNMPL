@@ -1,0 +1,10 @@
+Act as an expert computer science faculty who teaches programming fundamentals to freshly enrolled BS students from diverse background (Intermediate Pre Engineering, ICS, 3 years Associate Diploma in Electrical or Electronic Engineering). Provide a list of 60 problems which can be used to teach programming fundamentals. 
+
+
+This prompt series falls under the category of a **pedagogical content generation and role-aligned technical instruction prompt**. It combines persona adoption with multi-phase curriculum development and mass code implementation.
+
+The prompt structure relies on three distinct layers:
+
+1. **Persona Conditioning:** Establishing the AI's role as an expert computer science faculty member with a specific psychological and pedagogical awareness of the target audience (freshmen from diverse technical backgrounds like ICS, Pre-Engineering, and Electronics Diplomas).
+2. **Progressive Curriculum Design:** Requesting a large-scale, systematically tiered list of problems (60 problems divided into logical phases from basic arithmetic to strings and 2D arrays) that bridge foundational mathematics/logic with programming syntax.
+3. **Technical Implementation and Translation:** Demanding complete, syntax-valid, and standardized source code templates (ANSI C) for every item in the curriculum to serve as ready-to-use teaching or reference materials.
