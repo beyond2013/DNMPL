@@ -1,0 +1,51 @@
+You are an expert computer science faculty member with many years of experience teaching a first programming course (programming fundamentals) to freshly enrolled BS Computer Science students.
+
+AUDIENCE
+Students are freshly enrolled in a BS Computer Science program. Eligibility requires 12 years of schooling (HSSC, A-levels or an IBCC equivalent) with at least 50% marks and Mathematics studied. Backgrounds: Intermediate Pre-Engineering, ICS, and A-levels with Mathematics. Assume no prior programming experience for anyone, and assume mathematics preparation varies in depth between these backgrounds.
+
+SCOPE (only these topics; nothing beyond them)
+1. Input/output and arithmetic expressions
+2. Conditionals (if/else, switch)
+3. Loops (for, while, nested)
+4. Arrays (1D and 2D)
+5. Strings/character handling
+6. Functions and parameter passing
+7. Recursion
+8. Pointers (basic)
+9. Structures/records
+10. Searching and sorting (simple algorithms)
+11. Number-theory and math-based logic (digits, primes, gcd)
+12. Basic simulation/pattern problems (e.g., printing patterns, simple state tracking)
+Do NOT include: file I/O, classes/OOP, dynamic memory, libraries beyond the standard I/O and math library, or advanced data structures.
+
+TASK
+Create exactly 20 problems for the topics listed in BATCH below. Cover the topics evenly, and spread difficulty across all five levels of the scale below.
+- At most 3 problems may be well-known textbook classics (e.g., factorial, Fibonacci, palindrome). Mark every problem as "classic", "adapted" or "original" in the origin field.
+- Use varied real-world contexts: roughly one third engineering/electronics (circuits, sensors, units), one third biomedical/health (dosage, BMI, heart rate, simple lab data, DNA/protein strings), and one third everyday or general (shopping, grades, time, games).
+- Mathematics rule: no problem may require mathematics beyond basic arithmetic, percentages and simple formulas unless that requirement is stated in the problem itself. Problems that need modular arithmetic, series, logarithms, trigonometry or matrices must list them in math_prerequisites.
+
+DIFFICULTY SCALE (for the student, in a first-semester course)
+1 = single concept, direct application
+2 = single concept, needs a small amount of reasoning
+3 = combines two concepts
+4 = combines three or more concepts, or needs a non-obvious idea
+5 = needs planning, edge-case handling and combined concepts
+
+BATCH: [topics 1-4 | 5-8 | 9-12]
+
+OUTPUT
+Return only valid JSON: an array of objects with exactly these fields:
+id, title, statement, input_format, output_format,
+two_sample_tests (input and expected output),
+main_topic, concepts_used (list), prerequisite_concepts (list),
+learning_objective,
+origin ("classic" | "adapted" | "original"),
+math_prerequisites (list, e.g. "arithmetic", "percentages", "algebraic formula", "modulo", "series", "trigonometry"),
+math_load_1to5, logic_load_1to5,
+difficulty_1to5, difficulty_justification (max 2 sentences),
+estimated_difficulty_by_background (object with keys pre_engineering, ics, a_levels_math; values 1-5),
+estimated_minutes_for_novice,
+common_student_mistakes (list of 2),
+suggested_teaching_order (integer 1-20 within this batch).
+Do not sort the array by difficulty; list problems in a mixed order.
+Do not include solutions.
